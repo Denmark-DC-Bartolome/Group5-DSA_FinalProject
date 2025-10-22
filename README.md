@@ -34,3 +34,14 @@ A simple terminal-based Bible application that allows users to:
     cd bible-app-terminal/src
 3. Run the main program:
     python main.py
+
+<hr>
+
+### **Generate Bible Text File**
+If you want to recreate the plain text version of the Bible:
+1. Download `en_kjv.json` from [thiagobodruk/bible](https://github.com/thiagobodruk/bible).
+2. Place it in the `/data` folder.
+3. Run:
+   ```bash
+   python src/json_to_txt.py
+   ```
