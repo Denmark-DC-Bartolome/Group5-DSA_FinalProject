@@ -1,14 +1,19 @@
-#  Terminal-Based Bible App
-**Final Project for Data Structures and Algorithms**
+### **Final Project for Data Structures and Algorithms**
+
+### **Terminal-Based Bible App**
 
 A simple terminal-based Bible application that allows users to:
-- Search verses using the Boyer–Moore algorithm
+
+- Search verses using the Boyer Moore algorithm
 - Bookmark favorite passages
 - Display a random "Verse of the Day"
 - Maintain a search history using a queue
 - Navigate a hierarchical Bible structure (Book → Chapter → Verse)
 
-##  Features
+<hr>
+
+### **Features**
+
 | Feature | Algorithm / Data Structure |
 |----------|----------------------------|
 | Search | Boyer–Moore Algorithm |
@@ -17,8 +22,12 @@ A simple terminal-based Bible application that allows users to:
 | Verse of the Day | Array/List + Random |
 | Search History | Queue (Deque) |
 
-##  How to Run
+<hr>
+
+### **How to Run**
+
 1. Clone the repository:
+
    ```bash
    git clone [https://github.com/yo/bible-app-terminal.git](https://github.com/Denmark-DC-Bartolome/Group5-DSA_FinalProject)
 
@@ -27,4 +36,3 @@ A simple terminal-based Bible application that allows users to:
 
 3. Run the main program:
     python main.py
-
