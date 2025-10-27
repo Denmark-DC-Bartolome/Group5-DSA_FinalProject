@@ -81,9 +81,21 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)
 
-print(" Welcome to the Bible Search and Study App!")
-print("Type 'help' for a list of commands.\n")
 
+
+print(" Welcome to the Bible Search and Study App!\n")
+print("""
+============================== HELP MENU ==============================
+  search <keyword/book/ref>         → Search for verses or references
+  next / prev                       → Navigate search results
+  bookmark <Book> <Chapter:Verse>   → Save a verse to your bookmarks
+  bookmarks                         → View saved bookmarks
+  history [n]                       → View search history (optionally limit results)
+  verseofday                        → Display a random verse
+  help                              → Show this help menu
+  exit                              → Quit the program
+=======================================================================
+""")
 
 
 
@@ -118,6 +130,7 @@ def main():
                 print(" Usage: search <keyword/book/ref>")
             else:
                 query = parts[1]
+                show_help()
                 search_verse(bible_tree, query, show_history)
 
         # -----------------------------
@@ -135,6 +148,7 @@ def main():
         elif command.lower().startswith("bookmark"):
             parts = command.split(" ", 2)
             if len(parts) < 3:
+                show_help()
                 print(" Usage: bookmark <Book> <Chapter:Verse>")
             else:
                 book, chap_verse = parts[1], parts[2]
@@ -144,9 +158,11 @@ def main():
                     verse_text = bible_tree[book][chapter][verse]
                     add_bookmark(ref, verse_text)
                 except KeyError:
+                    show_help()
                     print(" Invalid verse reference. Please check your input.")
 
         elif command.lower() == "bookmarks":
+            show_help()
             show_bookmarks()
 
         # -----------------------------
@@ -156,8 +172,10 @@ def main():
             parts = command.split(" ", 1)
             if len(parts) > 1 and parts[1].isdigit():
                 limit = int(parts[1])
+                show_help()
                 show_history(limit)
             else:
+                show_help()
                 show_history()
 
     # Shell
@@ -168,6 +186,7 @@ def main():
         # VERSE OF THE DAY
         # -----------------------------
         elif command.lower() == "verseofday":
+            show_help()
             verse_of_the_day(bible_tree)
 
         # -----------------------------
