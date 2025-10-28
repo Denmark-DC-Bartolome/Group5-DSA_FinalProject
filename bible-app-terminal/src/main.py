@@ -77,6 +77,8 @@ from ui import show_help
 # -------------------------------------------------
 # Define path to Bible data file (bible.txt)
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
+# cache_file = os.path.join(os.path.dirname(__file__), "../data/verse_cache.txt")
+
 
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)

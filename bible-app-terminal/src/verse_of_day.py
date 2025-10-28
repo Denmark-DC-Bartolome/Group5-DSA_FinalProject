@@ -18,7 +18,7 @@ def verse_of_the_day(bible_tree):
     Selects and displays a random verse from the loaded Bible data.
     Caches the verse for 24 hours so it doesn’t change until the next day.
     """
-    cache_file = os.path.join(os.path.dirname(__file__), "verse_cache.txt")
+    cache_file = os.path.join(os.path.dirname(__file__), "../data/verse_cache.txt")
 
     # Current date (Philippine Time)
     today = datetime.now(PHT).strftime("%Y-%m-%d")
