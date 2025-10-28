@@ -16,10 +16,10 @@ Features:
 
 import os
 from data_structure import load_bible
-from search import search_verse, navigation
-from bookmark import add_bookmark, show_bookmarks
+from search import search_verse
+from bookmark import add_bookmark, show_bookmarks, bookmarks
 from verse_of_day import verse_of_the_day
-from history import show_history
+from history import history, show_history
 from datetime import datetime
 from ui import show_help
 
@@ -127,13 +127,14 @@ def main():
         # -----------------------------
         elif command.lower().startswith("search"):
             # Extract query after the command
-            parts = command.split(" ", 1)
-            if len(parts) < 2:
-                print(" Usage: search <keyword/book/ref>")
+            _, *query = command.split(" ", 1)
+            if query:
+                search_verse(bible_tree, query[0], history)
             else:
-                query = parts[1]
-                show_help()
-                search_verse(bible_tree, query, show_history)
+                print("Usage: search <keyword>")
+
+
+        
 
         # -----------------------------
         # NAVIGATION HANDLER
