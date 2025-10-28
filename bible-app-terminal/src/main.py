@@ -83,7 +83,7 @@ bible_tree = load_bible(DATA_PATH)
 
 
 
-print(" Welcome to the Bible Search and Study App!\n")
+print("\nWelcome to HolySearch | Where Every Search Leads to His Word.\n")
 print("""
 ============================== HELP MENU ==============================
   search <keyword/book/ref>         → Search for verses or references
