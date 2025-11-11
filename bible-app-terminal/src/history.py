@@ -23,7 +23,7 @@ def add_history(query):
     history.append((timestamp, query))
 
 
-def show_history(limit=None):
+def show_history(limit= None):
     """
     Displays recent search history.
     If 'limit' is specified, only shows that number of recent searches.
