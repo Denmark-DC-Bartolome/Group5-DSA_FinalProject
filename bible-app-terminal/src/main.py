@@ -83,6 +83,7 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)
 
+<<<<<<< Updated upstream
 
 
 print("\nWelcome to HolySearch | Where Every Search Leads to His Word.\n")
@@ -99,6 +100,26 @@ print("""
 =======================================================================
 """)
 
+=======
+#Welcome message (landing screen)
+def welcome():
+    clear_screen()
+    book = [
+    "\t\t           __...--~~~~~-._   _.-~~~~~--...__",
+    "\t\t         //               `V'               \\\\ ",
+    "\t\t        //                 |                 \\\\ ",
+    "\t\t       //__...--~~~~~~-._  |  _.-~~~~~~--...__\\\\ ",
+    "\t\t      //__.....----~~~~._\\ | /_.~~~~----.....__\\\\",
+    "\t\t     ====================\\\\|//====================",
+    "\t\t                          `---`"
+    ]
+
+    for line in book:
+        print(line)
+    print("\t\t      Welcome to the Bible Search and Study App!")
+    show_commands()
+    main()
+>>>>>>> Stashed changes
 
 
 # -------------------------------------------------
@@ -165,7 +186,11 @@ def main():
                     print(" Invalid verse reference. Please check your input.")
 
         elif command.lower() == "bookmarks":
+<<<<<<< Updated upstream
             show_help()
+=======
+            clear_screen()
+>>>>>>> Stashed changes
             show_bookmarks()
 
         # -----------------------------
@@ -178,7 +203,11 @@ def main():
                 show_help()
                 show_history(limit)
             else:
+<<<<<<< Updated upstream
                 show_help()
+=======
+                clear_screen()
+>>>>>>> Stashed changes
                 show_history()
 
     # Shell
@@ -189,7 +218,11 @@ def main():
         # VERSE OF THE DAY
         # -----------------------------
         elif command.lower() == "verseofday":
+<<<<<<< Updated upstream
             show_help()
+=======
+            clear_screen()
+>>>>>>> Stashed changes
             verse_of_the_day(bible_tree)
 
         # -----------------------------
