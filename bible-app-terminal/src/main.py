@@ -183,11 +183,7 @@ def main():
                     print(" Invalid verse reference. Please check your input.")
 
         elif command.lower() == "bookmarks":
-<<<<<<< Updated upstream
-            show_help()
-=======
             clear_screen()
->>>>>>> Stashed changes
             show_bookmarks()
 
         # -----------------------------
@@ -200,11 +196,7 @@ def main():
                 show_help()
                 show_history(limit)
             else:
-<<<<<<< Updated upstream
-                show_help()
-=======
                 clear_screen()
->>>>>>> Stashed changes
                 show_history()
 
     # Shell
@@ -215,11 +207,7 @@ def main():
         # VERSE OF THE DAY
         # -----------------------------
         elif command.lower() == "verseofday":
-<<<<<<< Updated upstream
-            show_help()
-=======
             clear_screen()
->>>>>>> Stashed changes
             verse_of_the_day(bible_tree)
 
         # -----------------------------
