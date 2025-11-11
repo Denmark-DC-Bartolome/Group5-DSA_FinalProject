@@ -21,10 +21,10 @@ from bookmark import add_bookmark, show_bookmarks, bookmarks
 from verse_of_day import verse_of_the_day
 from history import history, show_history
 from datetime import datetime
-from ui import show_help
+from ui import show_commands, clear_screen
 
 
-# FOR FUTURE FEATURES
+# FOR FUTURE FEATURES (Bible Translation)
 # # -------------------------------------------------
 # #  SELECT BIBLE VERSION
 # # -------------------------------------------------
@@ -55,12 +55,6 @@ from ui import show_help
 #     return bible_tree, version_name
 
 
-
-
-
-
-
-
 # # -------------------------------------------------
 # #  MAIN PROGRAM STARTUP
 # # -------------------------------------------------
@@ -68,9 +62,6 @@ from ui import show_help
 
 # print(f" Current Version: {current_version}")
 # print("Type 'help' for a list of commands.\n")
-
-
-
 
 # -------------------------------------------------
 #  GLOBAL CONFIGURATION
@@ -83,21 +74,9 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)
 
+print(" Welcome to the Bible Search and Study App!")
+print("Type 'help' for a list of commands.\n")
 
-
-print("\nWelcome to HolySearch | Where Every Search Leads to His Word.\n")
-print("""
-============================== HELP MENU ==============================
-  search <keyword/book/ref>         → Search for verses or references
-  next / prev                       → Navigate search results
-  bookmark <Book> <Chapter:Verse>   → Save a verse to your bookmarks
-  bookmarks                         → View saved bookmarks
-  history [n]                       → View search history (optionally limit results)
-  verseofday                        → Display a random verse
-  help                              → Show this help menu
-  exit                              → Quit the program
-=======================================================================
-""")
 
 
 
@@ -112,15 +91,18 @@ def main():
         # -----------------------------
         # EXIT PROGRAM
         # -----------------------------
+        if command.lower() == "home":
+            clear_screen()
+            welcome()
+            break
+        
+        # -----------------------------
+        # EXIT PROGRAM
+        # -----------------------------
         if command.lower() == "exit":
             print(" Exiting Bible Search App. Have a blessed day!")
+            clear_screen()
             break
-
-        # -----------------------------
-        # HELP MENU
-        # -----------------------------
-        elif command.lower() == "help":
-            show_help()
 
         # -----------------------------
         # SEARCH HANDLER
@@ -148,10 +130,10 @@ def main():
         # -----------------------------
         # BOOKMARKS HANDLER
         # -----------------------------
-        elif command.lower().startswith("bookmark"):
+        elif command.lower() == "bookmark":
             parts = command.split(" ", 2)
             if len(parts) < 3:
-                show_help()
+                show_commands()
                 print(" Usage: bookmark <Book> <Chapter:Verse>")
             else:
                 book, chap_verse = parts[1], parts[2]
@@ -161,12 +143,12 @@ def main():
                     verse_text = bible_tree[book][chapter][verse]
                     add_bookmark(ref, verse_text)
                 except KeyError:
-                    show_help()
+                    show_commands()
                     print(" Invalid verse reference. Please check your input.")
 
         elif command.lower() == "bookmarks":
-            show_help()
             show_bookmarks()
+            show_commands()
 
         # -----------------------------
         # SEARCH HISTORY HANDLER
@@ -175,11 +157,11 @@ def main():
             parts = command.split(" ", 1)
             if len(parts) > 1 and parts[1].isdigit():
                 limit = int(parts[1])
-                show_help()
+                show_commands()
                 show_history(limit)
             else:
-                show_help()
                 show_history()
+                show_commands()
 
     # Shell
     #   history 5 (shows only 5 searchess)
@@ -189,14 +171,14 @@ def main():
         # VERSE OF THE DAY
         # -----------------------------
         elif command.lower() == "verseofday":
-            show_help()
             verse_of_the_day(bible_tree)
+            show_commands()
 
         # -----------------------------
         # UNKNOWN COMMAND HANDLER
         # -----------------------------
         else:
-            print(" Unknown command. Type 'help' for available options.")
+            print(" Unknown command. The available options are displayed above.")
 
 
 # -------------------------------------------------
@@ -204,6 +186,7 @@ def main():
 # -------------------------------------------------
 if __name__ == "__main__":
     try:
+        welcome()
         main()
     except KeyboardInterrupt:
         print("\n Program terminated. Have a blessed day!")
