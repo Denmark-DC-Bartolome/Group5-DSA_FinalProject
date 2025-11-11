@@ -83,7 +83,6 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)
 
-<<<<<<< Updated upstream
 
 
 print("\nWelcome to HolySearch | Where Every Search Leads to His Word.\n")
@@ -100,7 +99,6 @@ print("""
 =======================================================================
 """)
 
-=======
 #Welcome message (landing screen)
 def welcome():
     clear_screen()
@@ -119,7 +117,6 @@ def welcome():
     print("\t\t      Welcome to the Bible Search and Study App!")
     show_commands()
     main()
->>>>>>> Stashed changes
 
 
 # -------------------------------------------------
