@@ -70,16 +70,22 @@ def search_verse(bible_tree, query, history):
                     found = True
     if found:
         add_history(query)
+        clear_screen()
         print(f"  Found {len(last_results)} result(s). Type 'next' or 'prev' to navigate.")
         show_current_verse()
+        show_commands()
     else:
+        clear_screen()
         print("No matching verses found.")
+        show_commands()
 
 def show_current_verse():
     """Displays the currently selected verse."""
     global current_index
     if not last_results:
+        clear_screen()
         print("No active search results. Use 'search <keyword>' first.")
+        show_commands()
         return
 
     verse_ref, text = last_results[current_index]
