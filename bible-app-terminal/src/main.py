@@ -179,7 +179,7 @@ def main():
 
 
 
-        elif command.lower().startswith("bookmark"):
+        elif command.lower().split()[0] == "bookmark":
             parts = command.split(" ", 2)
 
             if len(parts) < 3:
@@ -218,18 +218,13 @@ def main():
             ref = f"{book_key} {chapter}:{verse}"
             add_bookmark(ref, verse_text)
 
-
-
-
-
-
-
-
-
-
-
-
-
+        # -----------------------------
+        # BOOKMARKS DISPLAY HANDLER
+        # -----------------------------
+        elif command.lower() == "bookmarks":
+            clear_screen()
+            show_commands()
+            show_bookmarks()
 
 
         # -----------------------------
