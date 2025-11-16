@@ -16,7 +16,7 @@ Features:
 
 import os
 from data_structure import load_bible
-from search import search_verse, navigation
+from search import search_verse, navigation, _find_book_matches, _choose_book_interactive
 from bookmark import add_bookmark, show_bookmarks, bookmarks
 from verse_of_day import verse_of_the_day
 from history import history, show_history
@@ -74,6 +74,10 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)
 
+
+
+
+
 #Welcome message (landing screen)
 def welcome():
     clear_screen()
@@ -122,9 +126,9 @@ def main():
         # -----------------------------
         elif command.lower().startswith("search"):
             # Extract query after the command
-            _, *query = command.split(" ", 1)
+            query = command.split(" ", 1)[1]
             if query:
-                search_verse(bible_tree, query[0], history)
+                search_verse(bible_tree, query)
             else:
                 print("Usage: search <keyword>")
 
@@ -143,26 +147,90 @@ def main():
         # -----------------------------
         # BOOKMARKS HANDLER
         # -----------------------------
-        elif command.lower() == "bookmark":
-            parts = command.split(" ", 2)
-            if len(parts) < 3:
-                show_commands()
-                print(" Usage: bookmark <Book> <Chapter:Verse>")
-            else:
-                book, chap_verse = parts[1], parts[2]
-                ref = f"{book} {chap_verse}"
-                try:
-                    chapter, verse = chap_verse.split(":")
-                    verse_text = bible_tree[book][chapter][verse]
-                    add_bookmark(ref, verse_text)
-                except KeyError:
-                    show_commands()
-                    print(" Invalid verse reference. Please check your input.")
 
-        elif command.lower() == "bookmarks":
-            clear_screen()
-            show_bookmarks()
-            show_commands()
+        # -------------OLD BOOKMARK-------
+
+
+        # elif command.lower()== "bookmark":
+        #     parts = command.split(" ", 2)
+        #     if len(parts) < 3:
+        #         show_commands()
+        #         print(" Usage: bookmark <Book> <Chapter:Verse>")
+        #     else:
+        #         book, chap_verse = parts[1], parts[2]
+        #         ref = f"{book} {chap_verse}"
+        #         try:
+        #             chapter, verse = chap_verse.split(":")
+        #             verse_text = bible_tree[book][chapter][verse]
+        #             add_bookmark(ref, verse_text)
+        #         except KeyError:
+        #             show_commands()
+        #             print(" Invalid verse reference. Please check your input.")
+
+        # elif command.lower() == "bookmarks":
+        #     clear_screen()
+        #     show_bookmarks()
+        #     show_commands()
+
+
+
+ 
+#  ------------------TESTING---------------------------------
+
+
+
+        elif command.lower().startswith("bookmark"):
+            parts = command.split(" ", 2)
+
+            if len(parts) < 3:
+                print(" Usage: bookmark <Book> <Chapter:Verse>")
+                continue
+
+            user_book = parts[1].strip()
+            chap_verse = parts[2].strip()
+
+            # Parse chapter:verse
+            try:
+                chapter, verse = chap_verse.split(":")
+            except ValueError:
+                print(" Invalid format. Use: chapter:verse (e.g., 3:16)")
+                continue
+
+            # Match book using search.py logic
+            matches = _find_book_matches(bible_tree, user_book)
+
+            if not matches:
+                print(f" No book found matching '{user_book}'.")
+                continue
+
+            # Let user choose if multiple
+            book_key = _choose_book_interactive(matches)
+            if not book_key:
+                continue
+
+            # Fetch verse safely
+            try:
+                verse_text = bible_tree[book_key][chapter][verse]
+            except KeyError:
+                print(" Chapter or verse not found.")
+                continue
+
+            ref = f"{book_key} {chapter}:{verse}"
+            add_bookmark(ref, verse_text)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         # -----------------------------
         # SEARCH HISTORY HANDLER
