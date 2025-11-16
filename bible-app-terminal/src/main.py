@@ -255,8 +255,9 @@ def main():
         # -----------------------------
         elif command.lower() == "verseofday":
             clear_screen()
-            verse_of_the_day(bible_tree)
             show_commands()
+            verse_of_the_day(bible_tree)
+            
 
         # -----------------------------
         # UNKNOWN COMMAND HANDLER
