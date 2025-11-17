@@ -29,6 +29,7 @@ Dependencies:
 """
 
 import re
+from ui import *
 from typing import List, Tuple, Optional
 from history import add_history  # your history module should provide add_history(query)
 
@@ -87,6 +88,7 @@ def _choose_book_interactive(matches: List[str]) -> Optional[str]:
     print(f"\n Your input matches multiple books:")
     for i, b in enumerate(matches, start=1):
         print(f"   {i}. {b}")
+
 
     while True:
         choice = input(f" Enter 1–{len(matches)} to select the correct book (or press Enter to cancel): ").strip()
@@ -247,6 +249,7 @@ def search_verse(bible_tree: dict, query: str):
 
         if matches and keyword_possible:
             # Prompt user: Book or Text?
+            clear_screen()
             print(f"\n The input '{q}' matches a book name and also appears as text in verses.")
             print(" Type 1 to treat input as a Book search (show book/chapter/verse).")
             print(" Type 2 to treat input as a Text/Keyword search (find verses containing the word).")
@@ -265,7 +268,9 @@ def search_verse(bible_tree: dict, query: str):
                 _show_current_page()
                 return
             else:
+                clear_screen()
                 print(" Cancelled.")
+                show_commands()
                 return
 
         if matches and not keyword_possible:
@@ -401,15 +406,18 @@ def _show_current_page():
     page_num = start // PAGE_SIZE + 1
     total_pages = (total - 1) // PAGE_SIZE + 1
 
+    clear_screen()
     print(f"\nShowing verses {start + 1}–{end} of {total} (Page {page_num} of {total_pages})\n")
-    print("-" * 80)
+    print("-" * 115)
     for i in range(start, end):
         ref, text = last_results[i]
-        print(f"{ref} — {text}")
-    print("-" * 80)
-    print(f"\nShowing verses {start + 1}–{end} of {total} (Page {page_num} of {total_pages})")
+        print(f"{ref} — {text}\n")
+    print("-" * 115)
+    show_commands()
     if total_pages > 1:
+
         print("\nUse 'next' or 'prev' to navigate pages.")
+        print("Or type 'home' to return to menu")
 
 
 def navigation(command: str):
@@ -419,7 +427,9 @@ def navigation(command: str):
     """
     global _current_page_start, last_results
     if not last_results:
+        clear_screen()
         print("ℹ No active search results. Use 'search <query>' to begin.")
+        show_commands()
         return
 
     total = len(last_results)
@@ -434,7 +444,9 @@ def navigation(command: str):
             _current_page_start -= PAGE_SIZE
             _show_current_page()
         else:
+            clear_screen()
             print(" You are already at the first page.")
+            show_commands()
     else:
         print(" Invalid navigation command. Use 'next' or 'prev'.")
 

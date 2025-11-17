@@ -16,12 +16,12 @@ Features:
 
 import os
 from data_structure import load_bible
-from search import search_verse, navigation, _find_book_matches, _choose_book_interactive
+from search import search_verse, navigation, _find_book_matches, _choose_book_interactive, clear_results
 from bookmark import add_bookmark, show_bookmarks, bookmarks
 from verse_of_day import verse_of_the_day
 from history import history, show_history
 from datetime import datetime
-from ui import show_commands, clear_screen
+from ui import *
 
 
 # FOR FUTURE FEATURES (Bible Translation)
@@ -92,10 +92,9 @@ def welcome():
     ]
 
     for line in book:
-        print(line)
-    print("\t\t      Welcome to the Bible Search and Study App!")
+        print(BLUE + line)
+    print("\t\t      Welcome to the Bible Search and Study App!"  + RESET)
     show_commands()
-    main()
 
 # -------------------------------------------------
 #  MAIN PROGRAM LOOP
@@ -106,12 +105,18 @@ def main():
         command = input("\n> ").strip()
 
         # -----------------------------
-        # EXIT PROGRAM
+        # BLANK INPUT HANDLER
+        # -----------------------------
+        if command == "":
+            print("Enter a valid command.")
+            continue
+
+        # -----------------------------
+        # HOME FUNCTION
         # -----------------------------
         if command.lower() == "home":
-            clear_screen()
-            welcome()
-            break
+            clear_results()
+            return welcome()
         
         # -----------------------------
         # EXIT PROGRAM
@@ -125,12 +130,16 @@ def main():
         # SEARCH HANDLER
         # -----------------------------
         elif command.lower().startswith("search"):
-            # Extract query after the command
-            query = command.split(" ", 1)[1]
-            if query:
-                search_verse(bible_tree, query)
-            else:
-                print("Usage: search <keyword>")
+            parts = command.split(" ", 1)
+
+            # If user typed only "search"
+            if len(parts) == 1 or not parts[1].strip():
+                print("💡 Usage: search <keyword>")
+                continue
+
+            query = parts[1].strip()
+            search_verse(bible_tree, query)
+
 
 
         
@@ -155,7 +164,7 @@ def main():
         #     parts = command.split(" ", 2)
         #     if len(parts) < 3:
         #         show_commands()
-        #         print(" Usage: bookmark <Book> <Chapter:Verse>")
+        #         print("💡 Usage: bookmark <Book> <Chapter:Verse>")
         #     else:
         #         book, chap_verse = parts[1], parts[2]
         #         ref = f"{book} {chap_verse}"
@@ -183,7 +192,7 @@ def main():
             parts = command.split(" ", 2)
 
             if len(parts) < 3:
-                print(" Usage: bookmark <Book> <Chapter:Verse>")
+                print("💡Usage: bookmark <Book> <Chapter:Verse>")
                 continue
 
             user_book = parts[1].strip()
@@ -193,14 +202,18 @@ def main():
             try:
                 chapter, verse = chap_verse.split(":")
             except ValueError:
+                clear_screen()
                 print(" Invalid format. Use: chapter:verse (e.g., 3:16)")
+                show_commands()
                 continue
 
             # Match book using search.py logic
             matches = _find_book_matches(bible_tree, user_book)
 
             if not matches:
+                clear_screen()
                 print(f" No book found matching '{user_book}'.")
+                show_commands()
                 continue
 
             # Let user choose if multiple
@@ -212,7 +225,9 @@ def main():
             try:
                 verse_text = bible_tree[book_key][chapter][verse]
             except KeyError:
+                clear_screen()
                 print(" Chapter or verse not found.")
+                show_commands()
                 continue
 
             ref = f"{book_key} {chapter}:{verse}"
