@@ -14,6 +14,7 @@ Features:
   • Modular structure for clarity and teamwork
 """
 
+import re   
 import os
 from data_structure import load_bible
 from search import search_verse, navigation, _find_book_matches, _choose_book_interactive, clear_results
@@ -71,12 +72,16 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
 # cache_file = os.path.join(os.path.dirname(__file__), "../data/verse_cache.txt")
 
 
+
 # Load Bible data into a hierarchical structure (Book → Chapter → Verse)
 bible_tree = load_bible(DATA_PATH)
 
 
 
-
+# ensure outputs folder exists early (helps when running from IDE)
+OUTPUTS_DIR = os.path.join(os.path.dirname(__file__), "../outputs")
+if not os.path.exists(OUTPUTS_DIR):
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
 #Welcome message (landing screen)
 def welcome():
@@ -153,85 +158,6 @@ def main():
         elif command.lower() == "prev":
             navigation("prev")
 
-        # -----------------------------
-        # BOOKMARKS HANDLER
-        # -----------------------------
-
-        # -------------OLD BOOKMARK-------
-
-
-        # elif command.lower()== "bookmark":
-        #     parts = command.split(" ", 2)
-        #     if len(parts) < 3:
-        #         show_commands()
-        #         print("💡 Usage: bookmark <Book> <Chapter:Verse>")
-        #     else:
-        #         book, chap_verse = parts[1], parts[2]
-        #         ref = f"{book} {chap_verse}"
-        #         try:
-        #             chapter, verse = chap_verse.split(":")
-        #             verse_text = bible_tree[book][chapter][verse]
-        #             add_bookmark(ref, verse_text)
-        #         except KeyError:
-        #             show_commands()
-        #             print(" Invalid verse reference. Please check your input.")
-
-        # elif command.lower() == "bookmarks":
-        #     clear_screen()
-        #     show_bookmarks()
-        #     show_commands()
-
-
-
- 
-#  ------------------TESTING---------------------------------
-
-
-
-        elif command.lower().split()[0] == "bookmark":
-            parts = command.split(" ", 2)
-
-            if len(parts) < 3:
-                print("💡Usage: bookmark <Book> <Chapter:Verse>")
-                continue
-
-            user_book = parts[1].strip()
-            chap_verse = parts[2].strip()
-
-            # Parse chapter:verse
-            try:
-                chapter, verse = chap_verse.split(":")
-            except ValueError:
-                clear_screen()
-                print(" Invalid format. Use: chapter:verse (e.g., 3:16)")
-                show_commands()
-                continue
-
-            # Match book using search.py logic
-            matches = _find_book_matches(bible_tree, user_book)
-
-            if not matches:
-                clear_screen()
-                print(f" No book found matching '{user_book}'.")
-                show_commands()
-                continue
-
-            # Let user choose if multiple
-            book_key = _choose_book_interactive(matches)
-            if not book_key:
-                continue
-
-            # Fetch verse safely
-            try:
-                verse_text = bible_tree[book_key][chapter][verse]
-            except KeyError:
-                clear_screen()
-                print(" Chapter or verse not found.")
-                show_commands()
-                continue
-
-            ref = f"{book_key} {chapter}:{verse}"
-            add_bookmark(ref, verse_text)
 
         # -----------------------------
         # BOOKMARKS DISPLAY HANDLER
@@ -240,6 +166,8 @@ def main():
             clear_screen()
             show_commands()
             show_bookmarks()
+
+
 
 
         # -----------------------------
@@ -256,8 +184,151 @@ def main():
                 show_history()
                 show_commands()
 
-    # Shell
-    #   history 5 (shows only 5 searchess)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # -----------------------------
+        # BOOKMARKS HANDLER
+        # -----------------------------
+
+        # -------------OLD BOOKMARK-------
+
+
+
+        # elif command.lower().split()[0] == "bookmark":
+        #     parts = command.split(" ", 2)
+
+        #     if len(parts) < 3:
+        #         print("💡Usage: bookmark <Book> <Chapter:Verse>")
+        #         continue
+
+        #     user_book = parts[1].strip()
+        #     chap_verse = parts[2].strip()
+
+        #     # Parse chapter:verse
+        #     try:
+        #         chapter, verse = chap_verse.split(":")
+        #     except ValueError:
+        #         clear_screen()
+        #         print(" Invalid format. Use: chapter:verse (e.g., 3:16)")
+        #         show_commands()
+        #         continue
+
+        #     # Match book using search.py logic
+        #     matches = _find_book_matches(bible_tree, user_book)
+
+        #     if not matches:
+        #         clear_screen()
+        #         print(f" No book found matching '{user_book}'.")
+        #         show_commands()
+        #         continue
+
+        #     # Let user choose if multiple
+        #     book_key = _choose_book_interactive(matches)
+        #     if not book_key:
+        #         continue
+
+        #     # Fetch verse safely
+        #     try:
+        #         verse_text = bible_tree[book_key][chapter][verse]
+        #     except KeyError:
+        #         clear_screen()
+        #         print(" Chapter or verse not found.")
+        #         show_commands()
+        #         continue
+
+        #     ref = f"{book_key} {chapter}:{verse}"
+        #     add_bookmark(ref, verse_text)
+
+
+
+
+
+
+#  ------------------TESTING---------------------------------
+
+
+
+
+# -----------------------------
+# BOOKMARKS HANDLER (robust regex-based)
+# -----------------------------
+        elif command.lower().startswith("bookmark"):
+            # Use regex to capture: bookmark <book name> <chapter:verse>
+            # Allows book name to contain spaces and leading numbers (e.g., "2 Peter", "1 John")
+            m = re.match(r"^bookmark\s+(.+?)\s+(\d+:\d+)\s*$", command, flags=re.IGNORECASE)
+            if not m:
+                clear_screen()
+                show_commands()
+                print("💡 Usage: bookmark <Book Name> <Chapter:Verse>  (e.g., bookmark 2 Peter 1:1)")
+                continue
+
+            user_book = m.group(1).strip()   # full book name, e.g. "2 Peter"
+            chap_verse = m.group(2).strip()  # e.g. "1:1"
+
+            # Parse chapter & verse
+            try:
+                chapter, verse = chap_verse.split(":")
+                chapter = chapter.strip()
+                verse = verse.strip()
+            except ValueError:
+                clear_screen()
+                show_commands()
+                print("❗ Invalid chapter:verse format. Use e.g., 3:16")
+                continue
+
+            # Find candidate books using search.py matching helper
+            matches = _find_book_matches(bible_tree, user_book)
+
+            if not matches:
+                clear_screen()
+                show_commands()
+                print(f"❌ No book found matching '{user_book}'. Try '2 Peter' or '2Pet' etc.")
+                continue
+
+            # If multiple candidates, let the user choose
+            book_key = _choose_book_interactive(matches)
+            if not book_key:
+                # user cancelled selection
+                clear_screen()
+                show_commands()
+                continue
+
+            # Attempt to fetch the verse from bible_tree using canonical book_key
+            try:
+                verse_text = bible_tree[book_key][chapter][verse]
+            except KeyError:
+                clear_screen()
+                show_commands()
+                print(f"❌ Verse not found: {book_key} {chapter}:{verse}. Check chapter/verse numbers.")
+                continue
+
+            ref = f"{book_key} {chapter}:{verse}"
+            add_bookmark(ref, verse_text)
+            continue
+
+
+
+
+
+
+
+
+
+
 
 
         # -----------------------------
