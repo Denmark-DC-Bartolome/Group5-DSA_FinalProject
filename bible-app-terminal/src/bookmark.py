@@ -8,6 +8,7 @@ whenever a change is made.
 
 import json
 import os
+from ui import *
 
 # On-disk path (relative to this file's directory)
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../outputs")
@@ -44,8 +45,7 @@ def _save_bookmarks():
         with open(BOOKMARKS_FILE, "w", encoding="utf-8") as f:
             json.dump(bookmarks, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f" Could not save bookmarks: {e}")
-
+        print(RED + f" Could not save bookmarks: {e}" + RESET)
 # Load bookmarks on module import
 _load_bookmarks()
 
@@ -73,7 +73,7 @@ def remove_bookmark(ref):
         _save_bookmarks()
         print(f"  Removed bookmark: {ref}")
     else:
-        print("  Bookmark not found.")
+        print(RED + "  Bookmark not found." + RESET)
 
 
 def show_bookmarks():
@@ -86,7 +86,7 @@ def show_bookmarks():
 
     print("\n Bookmarked Verses:")
     for ref, text in bookmarks.items():
-        print(f"{ref} — {text}")
+        print(f"{BLUE}{ref}{RESET} — {text}\n")
 
 
 def export_bookmarks_txt(path):

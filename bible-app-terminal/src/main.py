@@ -98,8 +98,8 @@ def welcome():
     ]
 
     for line in book:
-        print(BLUE + line)
-    print("\t\t      Welcome to the Bible Search and Study App!"  + RESET)
+        print(line)
+    print("\t\t      Welcome to the Bible Search and Study App!")
     show_commands()
 
 # -------------------------------------------------
@@ -114,7 +114,7 @@ def main():
         # BLANK INPUT HANDLER
         # -----------------------------
         if command == "":
-            print(RED +"Enter a valid command." + CLEAR)
+            print(RED +"Enter a valid command." + RESET)
             continue
 
         
@@ -134,8 +134,8 @@ def main():
             ]
 
             for line in book:
-                print(BLUE + line)
-            print(BLUE+ BOLD +" \t\t     Exiting Bible Search App. Have a blessed day!" + RESET)
+                print(CYAN + line)
+            print(CYAN+ BOLD +" \t\t     Exiting Bible Search App. Have a blessed day!" + RESET)
             break
 
         # -----------------------------
@@ -143,10 +143,10 @@ def main():
         # -----------------------------
         elif command.lower().startswith("search"):
             parts = command.split(" ", 1)
-
+            clear_results()
             # If user typed only "search"
             if len(parts) == 1 or not parts[1].strip():
-                print(" Usage: search <keyword>")
+                print(YELLOW + "💡 Usage: search <keyword>" + RESET)
                 continue
 
             query = parts[1].strip()
@@ -158,9 +158,9 @@ def main():
         # MENU (help) - avoid stopping program
         # -----------------------------
         elif command.lower() == "home":
-            # Do not return or exit — just show help and continue
+            clear_results()
             clear_screen()
-            show_commands()
+            welcome()
             continue
 
 
@@ -183,8 +183,9 @@ def main():
         # -----------------------------
         elif command.lower() == "bookmarks":
             clear_screen()
-            show_commands()
+            clear_results()
             show_bookmarks()
+            show_commands()
             continue
 
 
@@ -195,6 +196,7 @@ def main():
         # -----------------------------
         elif command.lower().startswith("history"):
             parts = command.split(" ", 1)
+            clear_results()
             if len(parts) > 1 and parts[1].isdigit():
                 limit = int(parts[1])
                 show_commands()               
@@ -225,7 +227,7 @@ def main():
             if not m:
                 clear_screen()
                 show_commands()
-                print(" Usage: bookmark <Book Name> <Chapter:Verse(s)>  (e.g., bookmark 2 Peter 1:1 or bookmark John 1:1-3,5)")
+                print(YELLOW + "💡 Usage: bookmark <Book Name> <Chapter:Verse(s)>  (e.g., bookmark 2 Peter 1:1 or bookmark John 1:1-3,5)" + RESET)
                 continue
 
             user_book = m.group(1).strip()   # e.g. "2 Peter" or "John"
@@ -237,7 +239,7 @@ def main():
             if not tokens:
                 clear_screen()
                 show_commands()
-                print("❗ Invalid verse(s) specification. Use e.g., 1 or 1-3 or 1,3-5")
+                print(RED + "❗ Invalid chapter:verse format. Use e.g., 3:16" +RESET)
                 continue
 
             # Find matching book(s)
@@ -245,7 +247,7 @@ def main():
             if not matches:
                 clear_screen()
                 show_commands()
-                print(f" No book found matching '{user_book}'. Try '2 Peter' or '2Pet' etc.")
+                print(RED + f"❌ No book found matching '{user_book}'. Try '2 Peter' or '2Pet' etc." + RESET)
                 continue
 
             book_key = _choose_book_interactive(matches)
@@ -305,7 +307,7 @@ def main():
                 for r in added:
                     print("  -", r)
             if missing:
-                print("\n The following verses were not found (not bookmarked):")
+                print(RED + "\n The following verses were not found (not bookmarked):" + RESET)
                 for r in missing:
                     print("  -", r)
             show_commands()
@@ -324,6 +326,7 @@ def main():
         # VERSE OF THE DAY
         # -----------------------------
         elif command.lower() == "verseofday":
+            clear_results()
             clear_screen()
             show_commands()
             verse_of_the_day(bible_tree)
@@ -333,7 +336,7 @@ def main():
         # UNKNOWN COMMAND HANDLER
         # -----------------------------
         else:
-            print(" Unknown command. The available options are displayed above.")
+            print(RED + " Unknown command. The available options are displayed above." + RESET)
 
 
 # -------------------------------------------------

@@ -5,35 +5,23 @@ ui.py
 Contains the command help and user interface display functions.
 Helps guide users through available commands.
 """
-# -------------------------------------------------
-#  ANSI COLOR CODES
-# -------------------------------------------------
-class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'
+
 # -------------------------------------------------
 #  COMMAND-LINE HELP MENU
 # -------------------------------------------------
 def show_commands():
     """Displays all available user commands with color coding."""
-    print(f"""{Colors.BOLD}{Colors.CYAN}
+    print(f"""{BOLD}{CYAN}
 ================================== COMMANDS MENU ====================================
-{Colors.END}{Colors.GREEN}  search <keyword/book/ref>       {Colors.END}→ Search for verses or references
-{Colors.GREEN}  next / prev                     {Colors.END}→ Navigate search results
-{Colors.GREEN}  bookmark <Book> <Chapter:Verse> {Colors.END}→ Save a verse to your bookmarks
-{Colors.GREEN}  bookmarks                       {Colors.END}→ View saved bookmarks
-{Colors.GREEN}  history [n]                     {Colors.END}→ View search history (optionally limit results)
-{Colors.GREEN}  verseofday                      {Colors.END}→ Display a random verse
-{Colors.GREEN}  home                            {Colors.END}→ Return to home menu
-{Colors.GREEN}  exit                            {Colors.END}→ Quit the program
-{Colors.CYAN}====================================================================================={Colors.END}
+{RESET}{GREEN}  search <keyword/book/ref>       {RESET}→ Search for verses or references
+{GREEN}  next / prev                     {RESET}→ Navigate search results
+{GREEN}  bookmark <Book> <Chapter:Verse> {RESET}→ Save a verse to your bookmarks
+{GREEN}  bookmarks                       {RESET}→ View saved bookmarks
+{GREEN}  history [n]                     {RESET}→ View search history (optionally limit results)
+{GREEN}  verseofday                      {RESET}→ Display a random verse
+{GREEN}  home                            {RESET}→ Return to home menu
+{GREEN}  exit                            {RESET}→ Quit the program
+{CYAN}====================================================================================={RESET}
 """)
 
 # -------------------------------------------------
