@@ -79,8 +79,18 @@ def _norm_book(s: str) -> str:
     return "".join(s.split()).lower() if s else ""
 
 def _find_book_matches(bible_tree: dict, short_name: str) -> List[str]:
-    t = _norm_book(short_name)
-    return [bk for bk in bible_tree.keys() if _norm_book(bk).startswith(t)]
+    """
+    Prefer exact normalized match, otherwise return prefix matches.
+    Helps avoid '2' matching many books when the user typed '2 Peter'.
+    """
+    target = _norm_book(short_name)
+    # exact match
+    for bk in bible_tree.keys():
+        if _norm_book(bk) == target:
+            return [bk]
+    # fallback: prefix matches
+    matches = [bk for bk in bible_tree.keys() if _norm_book(bk).startswith(target)]
+    return matches
 
 def _choose_book_interactive(matches: List[str]) -> Optional[str]:
     if not matches:

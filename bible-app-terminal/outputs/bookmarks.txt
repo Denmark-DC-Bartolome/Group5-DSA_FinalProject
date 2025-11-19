@@ -3,5 +3,6 @@
   "2 Peter 1:1": "Simon Peter, a servant and an apostle of Jesus Christ, to them that have obtained like precious faith with us through the righteousness of God and our Saviour Jesus Christ: {Simon: or, Symeon} {God...: Gr. of our God and Saviour}",
   "Genesis 1:2": "And the earth was without form, and void; and darkness {was} upon the face of the deep. And the Spirit of God moved upon the face of the waters.",
   "Genesis 2:2": "And on the seventh day God ended his work which he had made; and he rested on the seventh day from all his work which he had made.",
-  "2 Corinthians 1:1": "Paul, an apostle of Jesus Christ by the will of God, and Timothy {our} brother, unto the church of God which is at Corinth, with all the saints which are in all Achaia:"
+  "2 Corinthians 1:1": "Paul, an apostle of Jesus Christ by the will of God, and Timothy {our} brother, unto the church of God which is at Corinth, with all the saints which are in all Achaia:",
+  "John 3:1": "There was a man of the Pharisees, named Nicodemus, a ruler of the Jews:"
 }

@@ -10,7 +10,7 @@ from collections import defaultdict
 from data_structure import load_bible   # reuse your existing loader
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/bible.txt")
-INDEX_PATH = os.path.join(os.path.dirname(__file__), "../data/index.json")
+INDEX_PATH = os.path.join(os.path.dirname(__file__), "../outputs/index.json")
 
 def build_index(bible_tree):
     inverted = defaultdict(list)

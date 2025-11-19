@@ -1,110 +1,74 @@
 """
-search_index.py
----------------
-Query helper for inverted index created by indexer.py.
+search_index.py (lightweight, compatible with your indexer)
+
+Expects outputs/index.json with shape:
+  { "inverted_index": { "word": ["Book 1:1", ...], ... } }
 
 Provides:
- - load_index() -> index dict
- - query_index(query_str, index, bible_tree) -> list of result dicts with verse text
+ - load_index()
+ - query_index(query_str, index, bible_tree) -> list of {ref, book, chapter, verse, text}
  - paginate_results(results, page, page_size)
-
-Query features:
- - phrase queries using double quotes:  search "love of God"
- - multi-term default -> AND (all terms must be present)
- - tokens normalized via indexer.tokenize (consistency)
 """
 
-from __future__ import annotations
 import os
 import json
 import re
 from typing import Dict, List, Tuple
-from indexer import tokenize, OUTPUT_DIR
 
 INDEX_FILE = os.path.join(os.path.dirname(__file__), "../outputs/index.json")
 _TOKEN_RE = re.compile(r"\w+", flags=re.UNICODE)
 
 
-def load_index() -> Dict[str, List[dict]]:
-    """Load the persisted index; return {} if missing/corrupt."""
+def load_index() -> Dict[str, List[str]]:
+    """Load the persisted index (simple term->list-of-refs)."""
     if not os.path.exists(INDEX_FILE):
         return {}
     try:
         with open(INDEX_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            payload = json.load(f)
+            # accept either direct dict or {"inverted_index": {...}}
+            if isinstance(payload, dict) and "inverted_index" in payload:
+                return payload["inverted_index"]
+            # if payload itself is the dict
+            return payload if isinstance(payload, dict) else {}
     except Exception:
         return {}
 
 
-def _posting_key(p: dict) -> str:
-    return f"{p['book']}|{p['chapter']}|{p['verse']}"
+def _split_ref(ref: str) -> Tuple[str, str, str]:
+    """Split 'Book Chapter:Verse' -> (book, chapter, verse)."""
+    # assume last token contains chapter:verse
+    parts = ref.rsplit(" ", 1)
+    if len(parts) != 2:
+        return ref, "0", "0"
+    book = parts[0]
+    chap_verse = parts[1]
+    if ":" in chap_verse:
+        ch, v = chap_verse.split(":", 1)
+    else:
+        ch, v = chap_verse, "0"
+    return book, ch, v
 
 
-def _merge_postings_list(postings: List[dict]) -> Dict[str, dict]:
-    """Convert postings list -> dict keyed by posting key for O(1) lookup."""
-    out = {}
-    for p in postings:
-        out[_posting_key(p)] = p
-    return out
+def _normalize_term(t: str) -> str:
+    return t.lower()
 
 
-def _intersect_terms(index: Dict[str, List[dict]], terms: List[str]) -> List[dict]:
-    """Return postings (list) that contain ALL terms (AND semantics)."""
-    if not terms:
+def _intersect_lists(lists: List[List[str]]) -> List[str]:
+    """Intersect multiple sorted/unsorted lists of refs (simple set intersection)."""
+    if not lists:
         return []
-    # Sort by posting list length (smallest first) to minimize work
-    term_lists = [(t, index.get(t, [])) for t in terms]
-    term_lists.sort(key=lambda x: len(x[1]) if x[1] else 0)
-    if not term_lists or not term_lists[0][1]:
+    sets = [set(lst) for lst in lists if lst]
+    if not sets:
         return []
-    base = _merge_postings_list(term_lists[0][1])
-    for t, plist in term_lists[1:]:
-        if not plist:
-            return []
-        cur = _merge_postings_list(plist)
-        keys = set(base.keys()) & set(cur.keys())
-        base = {k: base[k] for k in keys}
-    return list(base.values())
+    common = set.intersection(*sets)
+    return list(common)
 
 
-def _phrase_search(index: Dict[str, List[dict]], phrase: str) -> List[dict]:
-    """
-    Phrase search using positional lists:
-    - tokenize phrase
-    - get postings for each token
-    - find verses common to all tokens and confirm positional adjacency
-    """
-    toks = tokenize(phrase)
-    if not toks:
-        return []
-    term_maps = {t: _merge_postings_list(index.get(t, [])) for t in toks}
-    # compute intersection of keys
-    keys = None
-    for m in term_maps.values():
-        ks = set(m.keys())
-        if keys is None:
-            keys = ks
-        else:
-            keys &= ks
-    if not keys:
-        return []
-    results = []
-    for k in keys:
-        pos_lists = [term_maps[t][k]["positions"] for t in toks]
-        pos_sets = [set(pl) for pl in pos_lists]
-        found = False
-        for p in pos_lists[0]:
-            ok = True
-            for i in range(1, len(pos_lists)):
-                if (p + i) not in pos_sets[i]:
-                    ok = False
-                    break
-            if ok:
-                found = True
-                break
-        if found:
-            results.append(term_maps[toks[0]][k])
-    return results
+def _is_phrase_in_text(phrase: str, text: str) -> bool:
+    if not phrase or not text:
+        return False
+    return phrase.lower() in text.lower()
 
 
 def _tokenize_query(query: str) -> Tuple[List[str], List[str]]:
@@ -117,59 +81,86 @@ def _tokenize_query(query: str) -> Tuple[List[str], List[str]]:
     return phrases, terms
 
 
-def query_index(query_str: str, index: Dict[str, List[dict]], bible_tree: dict) -> List[dict]:
+def query_index(query_str: str, index: Dict[str, List[str]], bible_tree: dict) -> List[dict]:
     """
-    Run query against index. Returns list of results as dicts with keys:
-      {ref, book, chapter, verse, text}
+    Query the simple index.
+    - terms are ANDed
+    - phrases (quoted) are verified by checking verse text
     """
     if not query_str or not query_str.strip():
         return []
-
-    query_str = query_str.strip()
     phrases, terms = _tokenize_query(query_str)
 
-    # phrase results: require all phrases (AND)
-    phrase_keys = None
-    for ph in phrases:
-        ph_matches = _phrase_search(index, ph)
-        keys = set(_posting_key(m) for m in ph_matches)
-        phrase_keys = keys if phrase_keys is None else (phrase_keys & keys)
+    # collect posting lists for terms
+    term_lists = []
+    for t in terms:
+        term_lists.append(index.get(t, []))
 
-    # term results (AND across terms)
-    term_keys = None
-    if terms:
-        term_postings = _intersect_terms(index, [t.lower() for t in terms])
-        term_keys = set(_posting_key(p) for p in term_postings)
-
-    # combine filters
-    if phrase_keys is not None and term_keys is not None:
-        final_keys = phrase_keys & term_keys
-    elif phrase_keys is not None:
-        final_keys = phrase_keys
-    elif term_keys is not None:
-        final_keys = term_keys
+    # intersect term posting lists
+    if term_lists:
+        candidate_refs = _intersect_lists(term_lists)
     else:
+        # if no plain terms, start from union of phrase matches later
+        candidate_refs = None
+
+    # if phrases exist, filter candidates by phrase presence in the verse text
+    if phrases:
+        # for each phrase, gather refs that contain the phrase by scanning bible_tree
+        phrase_ref_sets = []
+        for ph in phrases:
+            ph_matches = []
+            # scan only candidate_refs if available, otherwise scan all verses
+            if candidate_refs is not None:
+                refs_to_check = candidate_refs
+            else:
+                # collect all refs from index (fast to iterate keys)
+                # but we need verse text; instead scan bible_tree once (safe)
+                refs_to_check = None
+
+            if refs_to_check is not None:
+                # check those refs
+                for ref in refs_to_check:
+                    book, ch, v = _split_ref(ref)
+                    text = bible_tree.get(book, {}).get(ch, {}).get(v, "")
+                    if _is_phrase_in_text(ph, text):
+                        ph_matches.append(ref)
+            else:
+                # full scan: for small phrase queries only done once
+                for book, chapters in bible_tree.items():
+                    for ch, verses in chapters.items():
+                        for v, txt in verses.items():
+                            ref = f"{book} {ch}:{v}"
+                            if _is_phrase_in_text(ph, txt):
+                                ph_matches.append(ref)
+            phrase_ref_sets.append(set(ph_matches))
+        # combine phrase sets (AND semantics across phrases)
+        if phrase_ref_sets:
+            phrase_common = set.intersection(*phrase_ref_sets)
+        else:
+            phrase_common = set()
+        # combine with candidate_refs
+        if candidate_refs is not None:
+            candidate_refs = list(set(candidate_refs) & phrase_common)
+        else:
+            candidate_refs = list(phrase_common)
+
+    # if still None (no terms and no phrases) -> empty
+    if candidate_refs is None:
         return []
 
+    # Build results with verse text
     results = []
-    for key in final_keys:
-        book, chapter, verse = key.split("|")
-        text = bible_tree.get(book, {}).get(chapter, {}).get(verse, "")
-        results.append({
-            "ref": f"{book} {chapter}:{verse}",
-            "book": book,
-            "chapter": chapter,
-            "verse": verse,
-            "text": text
-        })
+    for ref in candidate_refs:
+        book, ch, v = _split_ref(ref)
+        text = bible_tree.get(book, {}).get(ch, {}).get(v, "")
+        results.append({"ref": ref, "book": book, "chapter": ch, "verse": v, "text": text})
 
-    # Simple stable ordering: by book, chapter, verse
-    results.sort(key=lambda r: (r["book"], int(r["chapter"]), int(r["verse"])))
+    # sort results for stable presentation
+    results.sort(key=lambda r: (r["book"], int(r["chapter"]) if r["chapter"].isdigit() else 0, int(r["verse"]) if r["verse"].isdigit() else 0))
     return results
 
 
 def paginate_results(results: List[dict], page: int = 1, page_size: int = 20) -> Tuple[List[dict], int]:
-    """Return (page_results, total_pages). page is 1-based."""
     if not results:
         return [], 0
     total = len(results)
