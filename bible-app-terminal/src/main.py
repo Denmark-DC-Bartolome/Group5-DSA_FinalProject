@@ -18,6 +18,7 @@ import re
 import os
 from data_structure import load_bible
 from search import search_verse, navigation, _find_book_matches, _choose_book_interactive, clear_results
+
 from bookmark import add_bookmark, show_bookmarks, bookmarks
 from verse_of_day import verse_of_the_day
 from history import history, show_history
