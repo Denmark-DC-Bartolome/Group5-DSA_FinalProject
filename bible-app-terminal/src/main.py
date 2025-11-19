@@ -114,7 +114,7 @@ def main():
         # BLANK INPUT HANDLER
         # -----------------------------
         if command == "":
-            print("Enter a valid command.")
+            print(RED +"Enter a valid command." + CLEAR)
             continue
 
         
@@ -135,8 +135,7 @@ def main():
 
             for line in book:
                 print(BLUE + line)
-            print(BLUE+ BOLD +" \t\t     Exiting Bible Search App. Have a blessed day!")
-            print(WHITE)
+            print(BLUE+ BOLD +" \t\t     Exiting Bible Search App. Have a blessed day!" + RESET)
             break
 
         # -----------------------------
@@ -147,7 +146,7 @@ def main():
 
             # If user typed only "search"
             if len(parts) == 1 or not parts[1].strip():
-                print("💡 Usage: search <keyword>")
+                print(" Usage: search <keyword>")
                 continue
 
             query = parts[1].strip()
@@ -284,7 +283,7 @@ def main():
             if not verses_to_bookmark:
                 clear_screen()
                 show_commands()
-                print("❗ No valid verses parsed from your input.")
+                print( RED+ " No valid verses parsed from your input." +RESET)
                 continue
 
             # Fetch verses from bible_tree and add bookmarks
