@@ -117,19 +117,26 @@ def main():
             print("Enter a valid command.")
             continue
 
-        # -----------------------------
-        # HOME FUNCTION
-        # -----------------------------
-        if command.lower() == "home":
-            clear_results()
-            return welcome()
         
         # -----------------------------
         # EXIT PROGRAM
         # -----------------------------
         if command.lower() == "exit":
-            print(" Exiting Bible Search App. Have a blessed day!")
             clear_screen()
+            book = [
+            "\t\t           __...--~~~~~-._   _.-~~~~~--...__",
+            "\t\t         //               `V'               \\\\ ",
+            "\t\t        //                 |                 \\\\ ",
+            "\t\t       //__...--~~~~~~-._  |  _.-~~~~~~--...__\\\\ ",
+            "\t\t      //__.....----~~~~._\\ | /_.~~~~----.....__\\\\",
+            "\t\t     ====================\\\\|//====================",
+            "\t\t                          `---`"
+            ]
+
+            for line in book:
+                print(BLUE + line)
+            print(BLUE+ BOLD +" \t\t     Exiting Bible Search App. Have a blessed day!")
+            print(WHITE)
             break
 
         # -----------------------------
@@ -145,6 +152,18 @@ def main():
 
             query = parts[1].strip()
             search_verse(bible_tree, query)
+
+
+
+        # -----------------------------
+        # MENU (help) - avoid stopping program
+        # -----------------------------
+        elif command.lower() == "home":
+            # Do not return or exit — just show help and continue
+            clear_screen()
+            show_commands()
+            continue
+
 
 
 
@@ -167,6 +186,7 @@ def main():
             clear_screen()
             show_commands()
             show_bookmarks()
+            continue
 
 
 
@@ -196,43 +216,39 @@ def main():
 
 
 
-# -----------------------------
-# BOOKMARKS HANDLER (robust regex-based)
-# -----------------------------
+        # -----------------------------
+        # BOOKMARKS HANDLER (robust, supports ranges/lists)
+        # -----------------------------
         elif command.lower().startswith("bookmark"):
-            # Use regex to capture: bookmark <book name> <chapter:verse>
-            # Allows book name to contain spaces and leading numbers (e.g., "2 Peter", "1 John")
-            m = re.match(r"^bookmark\s+(.+?)\s+(\d+:\d+)\s*$", command, flags=re.IGNORECASE)
+            # Regex captures: bookmark <book name> <chapter>:<verses>
+            # verses can be e.g. "1", "1-3", "1,3-5,8", spaces allowed
+            m = re.match(r"^bookmark\s+(.+?)\s+(\d+)\s*:\s*([\d,\-\s]+)\s*$", command, flags=re.IGNORECASE)
             if not m:
                 clear_screen()
                 show_commands()
-                print("💡 Usage: bookmark <Book Name> <Chapter:Verse>  (e.g., bookmark 2 Peter 1:1)")
+                print(" Usage: bookmark <Book Name> <Chapter:Verse(s)>  (e.g., bookmark 2 Peter 1:1 or bookmark John 1:1-3,5)")
                 continue
 
-            user_book = m.group(1).strip()   # full book name, e.g. "2 Peter"
-            chap_verse = m.group(2).strip()  # e.g. "1:1"
+            user_book = m.group(1).strip()   # e.g. "2 Peter" or "John"
+            chapter = m.group(2).strip()     # e.g. "1"
+            verse_part = m.group(3).strip()  # e.g. "1-3,5"
 
-            # Parse chapter & verse
-            try:
-                chapter, verse = chap_verse.split(":")
-                chapter = chapter.strip()
-                verse = verse.strip()
-            except ValueError:
+            # Normalize whitespace inside verse_part and split by comma
+            tokens = [t.strip() for t in verse_part.split(",") if t.strip()]
+            if not tokens:
                 clear_screen()
                 show_commands()
-                print("❗ Invalid chapter:verse format. Use e.g., 3:16")
+                print("❗ Invalid verse(s) specification. Use e.g., 1 or 1-3 or 1,3-5")
                 continue
 
-            # Find candidate books using search.py matching helper
+            # Find matching book(s)
             matches = _find_book_matches(bible_tree, user_book)
-
             if not matches:
                 clear_screen()
                 show_commands()
-                print(f"❌ No book found matching '{user_book}'. Try '2 Peter' or '2Pet' etc.")
+                print(f" No book found matching '{user_book}'. Try '2 Peter' or '2Pet' etc.")
                 continue
 
-            # If multiple candidates, let the user choose
             book_key = _choose_book_interactive(matches)
             if not book_key:
                 # user cancelled selection
@@ -240,20 +256,61 @@ def main():
                 show_commands()
                 continue
 
-            # Attempt to fetch the verse from bible_tree using canonical book_key
-            try:
-                verse_text = bible_tree[book_key][chapter][verse]
-            except KeyError:
+            # Expand tokens into a list of verse numbers (strings)
+            verses_to_bookmark = []
+            for token in tokens:
+                if "-" in token:
+                    # range
+                    try:
+                        s_str, e_str = [x.strip() for x in token.split("-", 1)]
+                        s_i = int(s_str); e_i = int(e_str)
+                    except ValueError:
+                        print(f"  Skipping invalid range '{token}'.")
+                        continue
+                    if s_i > e_i:
+                        print(f"  Skipping invalid range '{token}' (start > end).")
+                        continue
+                    for v in range(s_i, e_i + 1):
+                        verses_to_bookmark.append(str(v))
+                else:
+                    # single verse
+                    try:
+                        v_i = int(token)
+                        verses_to_bookmark.append(str(v_i))
+                    except ValueError:
+                        print(f"  Skipping invalid verse '{token}'.")
+                        continue
+
+            if not verses_to_bookmark:
                 clear_screen()
                 show_commands()
-                print(f"❌ Verse not found: {book_key} {chapter}:{verse}. Check chapter/verse numbers.")
+                print("❗ No valid verses parsed from your input.")
                 continue
 
-            ref = f"{book_key} {chapter}:{verse}"
-            add_bookmark(ref, verse_text)
+            # Fetch verses from bible_tree and add bookmarks
+            added = []
+            missing = []
+            for vnum in verses_to_bookmark:
+                verse_text = bible_tree.get(book_key, {}).get(chapter, {}).get(vnum)
+                if verse_text:
+                    ref = f"{book_key} {chapter}:{vnum}"
+                    add_bookmark(ref, verse_text)
+                    added.append(ref)
+                else:
+                    missing.append(f"{book_key} {chapter}:{vnum}")
+
+            # Feedback to user
+            clear_screen()
+            if added:
+                print(" Added bookmarks:")
+                for r in added:
+                    print("  -", r)
+            if missing:
+                print("\n The following verses were not found (not bookmarked):")
+                for r in missing:
+                    print("  -", r)
+            show_commands()
             continue
-
-
 
 
 
