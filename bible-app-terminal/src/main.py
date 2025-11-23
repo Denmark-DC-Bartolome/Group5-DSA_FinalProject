@@ -19,7 +19,7 @@ import os
 from data_structure import load_bible
 from search import search_verse, navigation, _find_book_matches, _choose_book_interactive, clear_results
 
-from bookmark import add_bookmark, show_bookmarks, bookmarks
+from bookmark import add_bookmark, show_bookmarks, bookmarks, remove_bookmark, remove_bookmarks_bulk, clear_all_bookmarks
 from verse_of_day import verse_of_the_day
 from history import history, show_history
 from datetime import datetime
@@ -99,7 +99,7 @@ def welcome():
 
     for line in book:
         print(line)
-    print("\t\t      Welcome to the Bible Search and Study App!")
+    print(CYAN+ BOLD + "\t\t      Welcome to the Bible Search and Study App!" + RESET)
     show_commands()
 
 # -------------------------------------------------
@@ -206,6 +206,112 @@ def main():
                 show_history()
                 show_commands()
 
+
+        # Make sure at top of main.py you import these:
+        # from bookmark import add_bookmark, show_bookmarks, bookmarks, remove_bookmark, remove_bookmarks_bulk, clear_all_bookmarks
+
+        # -----------------------------
+        # BOOKMARK REMOVE / CLEAR HANDLER (robust parsing)
+        # -----------------------------
+        elif command.lower().startswith("bookmark remove") or command.lower().startswith("bookmark del"):
+            # Accept syntax:
+            #   bookmark remove <Book Name> <chapter:verse[ -end] [, chapter:verse ...]>
+            # Examples:
+            #   bookmark remove John 1:1-3
+            #   bookmark remove John 1:1,1:3,1:5
+            #   bookmark remove "2 Peter" 1:1-2
+            m = re.match(r"^bookmark\s+(?:remove|del)\s+(.+?)\s+(.+)$", command, flags=re.IGNORECASE)
+            if not m:
+                clear_screen()
+                show_commands()
+                print(" Usage: bookmark remove <Book Name> <chapter:verse>  (e.g., bookmark remove John 1:1-3 or bookmark remove John 1:1,1:3)")
+                continue
+
+            user_book = m.group(1).strip()
+            chap_verse_input = m.group(2).strip()
+
+            # Resolve candidate books (keeps behavior consistent with add_bookmark)
+            matches = _find_book_matches(bible_tree, user_book)
+            if not matches:
+                clear_screen()
+                show_commands()
+                print(f" No book found matching '{user_book}'.")
+                continue
+
+            book_key = _choose_book_interactive(matches)
+            if not book_key:
+                # user cancelled selection
+                clear_screen()
+                show_commands()
+                continue
+
+            # Robust parser: find all occurrences of "chapter:verse" or "chapter:verse-range"
+            # Example matches it will find: "1:1", "1:1-3", "2:4-6"
+            refs_to_remove = []
+            # pattern: chapter:verse or chapter:verse-range
+            for match in re.finditer(r"(\d+)\s*:\s*(\d+(?:\s*-\s*\d+)?)", chap_verse_input):
+                chapter_part = match.group(1)
+                verse_part = match.group(2).replace(" ", "")  # remove spaces like "1 - 3" -> "1-3"
+
+                if "-" in verse_part:
+                    s_str, e_str = verse_part.split("-", 1)
+                    try:
+                        s = int(s_str); e = int(e_str)
+                    except ValueError:
+                        continue
+                    # expand range
+                    for v in range(s, e + 1):
+                        refs_to_remove.append(f"{book_key} {chapter_part}:{v}")
+                else:
+                    # single verse
+                    refs_to_remove.append(f"{book_key} {chapter_part}:{verse_part}")
+
+            # If user typed only verse numbers without chapter (like "1-3" or "1,3"),
+            # try to extract a leading chapter from the input (e.g., "1:1-3,4,5" -> already handled).
+            # But if no chapter:verse tokens found, attempt a fallback:
+            if not refs_to_remove:
+                # Try pattern: single chapter provided once, followed by verse numbers "chapter: verses-maybe"
+                # Example: "1:1-3,5" would have matched earlier. If user typed "1 1-3" (unlikely), we try:
+                simple = re.match(r"^(\d+)\s+(.+)$", chap_verse_input)
+                if simple:
+                    chapter_part = simple.group(1)
+                    rest = simple.group(2)
+                    # split by comma and handle ranges
+                    for token in re.split(r"\s*,\s*", rest):
+                        token = token.strip()
+                        if "-" in token:
+                            try:
+                                s, e = map(int, token.split("-", 1))
+                                for v in range(s, e + 1):
+                                    refs_to_remove.append(f"{book_key} {chapter_part}:{v}")
+                            except ValueError:
+                                continue
+                        elif token.isdigit():
+                            refs_to_remove.append(f"{book_key} {chapter_part}:{token}")
+
+            if not refs_to_remove:
+                clear_screen()
+                show_commands()
+                print("❗ Could not parse chapter:verse input. Use forms like '1:1-3' or '1:1,1:3'.")
+                continue
+
+            # Remove duplicates and keep stable order
+            refs_to_remove = list(dict.fromkeys(refs_to_remove))
+
+            # Call bulk removal function from bookmark module
+            removed, not_found = remove_bookmarks_bulk(refs_to_remove)
+            # removed is count, not_found list printed by remove_bookmarks_bulk already
+            continue
+
+        elif command.lower().strip() in ("bookmarks clear", "bookmark clear"):
+            clear_screen()
+            show_commands()
+            confirm = input("Are you sure you want to CLEAR ALL bookmarks? Type 'yes' to confirm: ").strip().lower()
+            if confirm == "yes":
+                clear_all_bookmarks()
+            else:
+                print("Cancelled.")
+            continue
 
 
 

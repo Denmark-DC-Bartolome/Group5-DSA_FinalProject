@@ -9,6 +9,7 @@ whenever a change is made.
 import json
 import os
 from ui import *
+import re
 
 # On-disk path (relative to this file's directory)
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../outputs")
@@ -40,6 +41,7 @@ def _load_bookmarks():
         bookmarks = {}
 
 def _save_bookmarks():
+    """Persist the in-memory bookmarks dict to disk (JSON)."""
     _ensure_output_dir()
     try:
         with open(BOOKMARKS_FILE, "w", encoding="utf-8") as f:
@@ -48,6 +50,37 @@ def _save_bookmarks():
         print(RED + f" Could not save bookmarks: {e}" + RESET)
 # Load bookmarks on module import
 _load_bookmarks()
+
+
+
+# -------------------------
+# Parsing helpers (if needed)
+# -------------------------
+# NOTE: The program's main flow already canonicalizes book names; these functions
+# help when user supplies a list/range of refs (if you later need to parse them inside this file).
+_REF_SPLIT_RE = re.compile(r"^(.+?)\s+(\d+:\d+(?:[-, \d]*)?)\s*$")
+
+def _normalize_ref_string(ref: str) -> str:
+    """
+    Normalize a single canonical ref string (no structural changes) — e.g. trim.
+    Used when removing exact keys from bookmarks dict.
+    """
+    return ref.strip()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # -------------------------
@@ -66,14 +99,61 @@ def add_bookmark(ref, verse_text):
 
 def remove_bookmark(ref):
     """
-    Remove a bookmark if it exists.
+    Remove a bookmark by exact reference string.
+    Accepts a single canonical ref (e.g. "John 3:16").
+    Returns True if removed, False if not found.
     """
-    if ref in bookmarks:
-        del bookmarks[ref]
+    key = _normalize_ref_string(ref)
+    if key in bookmarks:
+        del bookmarks[key]
         _save_bookmarks()
-        print(f"  Removed bookmark: {ref}")
+        print(GREEN + f"  Removed bookmark: {key}" + RESET)
+        return True
     else:
-        print(RED + "  Bookmark not found." + RESET)
+        print( RED + f" Bookmark not found: {key}" + RESET)
+        return False
+
+
+def remove_bookmarks_bulk(refs):
+    """
+    Remove multiple bookmarks given a list of canonical reference strings.
+    Returns a tuple (removed_count, not_found_list).
+    """
+    removed = 0
+    not_found = []
+    for r in refs:
+        key = _normalize_ref_string(r)
+        if key in bookmarks:
+            del bookmarks[key]
+            removed += 1
+        else:
+            not_found.append(key)
+    # Save once after bulk removal
+    _save_bookmarks()
+    if removed:
+        print(f"  Removed {removed} bookmark(s).")
+    if not_found:
+        print("  These bookmarks were not found and so were not removed:")
+        for k in not_found:
+            print(f"   - {k}")
+    return (removed, not_found)
+
+def clear_all_bookmarks():
+    """
+    Remove all bookmarks (in-memory and on-disk).
+    Use caution: this is destructive and permanent.
+    """
+    global bookmarks
+    bookmarks = {}
+    _save_bookmarks()
+    print("  All bookmarks cleared.")
+
+
+
+
+
+
+
 
 
 def show_bookmarks():
@@ -87,6 +167,8 @@ def show_bookmarks():
     print("\n Bookmarked Verses:")
     for ref, text in bookmarks.items():
         print(f"{BLUE}{ref}{RESET} — {text}\n")
+
+
 
 
 def export_bookmarks_txt(path):

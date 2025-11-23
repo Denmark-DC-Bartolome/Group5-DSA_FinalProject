@@ -17,6 +17,8 @@ def show_commands():
 {GREEN}  next / prev                     {RESET}→ Navigate search results
 {GREEN}  bookmark <Book> <Chapter:Verse> {RESET}→ Save a verse to your bookmarks
 {GREEN}  bookmarks                       {RESET}→ View saved bookmarks
+{GREEN}  bookmark remove/del             {RESET}→ Remove bookmark/s
+{GREEN}  bookmark clear                  {RESET}→ Clear bookmarks
 {GREEN}  history [n]                     {RESET}→ View search history (optionally limit results)
 {GREEN}  verseofday                      {RESET}→ Display a random verse
 {GREEN}  home                            {RESET}→ Return to home menu
