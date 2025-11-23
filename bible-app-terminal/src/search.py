@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from typing import List, Tuple, Optional, Dict
 from history import add_history
-from ui import clear_screen, show_commands
+from ui import *
 
 # try to use the index-based search helper (optional)
 try:
@@ -101,7 +101,7 @@ def _choose_book_interactive(matches: List[str]) -> Optional[str]:
     for i, b in enumerate(matches, 1):
         print(f"  {i}. {b}")
     while True:
-        c = input(f"Enter 1–{len(matches)} (or Enter to cancel): ").strip()
+        c = input(f"Enter {GREEN}1–{len(matches)} {RESET}(or Enter to cancel): ").strip()
         if c == "":
             print("Cancelled.")
             return None
@@ -111,7 +111,7 @@ def _choose_book_interactive(matches: List[str]) -> Optional[str]:
                 sel = matches[idx - 1]
                 print(f"Selected: {sel}")
                 return sel
-        print("Invalid choice — try again.")
+        print(RED + "Invalid choice — try again." + RESET)
 
 # ------------------------------------------------------------------
 # Quick check: does token appear anywhere? (uses index if available)
@@ -143,7 +143,7 @@ def search_verse(bible_tree: dict, query: str):
     global last_results, _current_page_start
     last_results = []; _current_page_start = 0
     if not query or not query.strip():
-        print(" Empty search. Use: search love | search Col 3:4 | search Col 1")
+        print(RED + " Empty search. Use: search love | search Col 3:4 | search Col 1" + RESET)
         return
     q = query.strip()
 
@@ -153,7 +153,7 @@ def search_verse(bible_tree: dict, query: str):
         book_raw, chap, verse_part = m.groups()
         matches = _find_book_matches(bible_tree, book_raw)
         if not matches:
-            print(f" Book '{book_raw}' not found.")
+            print(RED + f" Book '{book_raw}' not found." + RESET)
             return
         bk = _choose_book_interactive(matches)
         if not bk:
@@ -185,7 +185,7 @@ def search_verse(bible_tree: dict, query: str):
         if matches and keyword_possible:
             clear_screen()
             print(f"\n '{q}' matches both book names and text.")
-            choice = input("Type 1 for Book, 2 for Text (Enter to cancel): ").strip()
+            choice = input("Type" + GREEN + " 1" + RESET + " for Book, "+ GREEN + "2 " + RESET +"for Text (Enter to cancel): ").strip()
             if choice == "1":
                 bk = _choose_book_interactive(matches)
                 if not bk: return
@@ -227,14 +227,14 @@ def _handle_text_search(bible_tree: dict, query: str):
         for ch, verses in chapters.items():
             for vnum, txt in verses.items():
                 if txt and horspool_search(txt, ql) != -1:
-                    last_results.append((f"{bk} {ch}:{vnum}", txt))
+                    last_results.append((f"{BLUE}{bk} {ch}:{vnum}{RESET}", txt))
 
 def _handle_reference_search(bible_tree: dict, book_key: str, chapter: str, verse_part: str):
     global last_results, _current_page_start
     last_results = []; _current_page_start = 0
     chap = bible_tree.get(book_key, {}).get(chapter)
     if not chap:
-        print(f" Chapter {chapter} not found in {book_key}."); return
+        print( RED + f" Chapter {chapter} not found in {book_key}." + RESET); return
     found = False
     for token in verse_part.split(","):
         part = token.strip()
@@ -252,14 +252,14 @@ def _handle_reference_search(bible_tree: dict, book_key: str, chapter: str, vers
             if t:
                 last_results.append((f"{book_key} {chapter}:{part}", t)); found = True
     if not found:
-        print(f" No matching verse(s) in {book_key} {chapter} for '{verse_part}'.")
+        print(RED+ f" No matching verse(s) in {book_key} {chapter} for '{verse_part}'." + RESET)
 
 def _handle_chapter_search(bible_tree: dict, book_key: str, chapter: str):
     global last_results, _current_page_start
     last_results = []; _current_page_start = 0
     chap = bible_tree.get(book_key, {}).get(chapter)
     if not chap:
-        print(f" Chapter {chapter} not found in {book_key}."); return
+        print( RED + f" Chapter {chapter} not found in {book_key}." + RESET); return
     for vnum, txt in chap.items():
         last_results.append((f"{book_key} {chapter}:{vnum}", txt))
 
@@ -268,7 +268,7 @@ def _handle_book_search(bible_tree: dict, book_key: str):
     last_results = []; _current_page_start = 0
     book_data = bible_tree.get(book_key, {})
     if not book_data:
-        print(f" Book '{book_key}' not found or empty."); return
+        print(RED + f" Book '{book_key}' not found or empty." + RESET); return
     for ch, verses in book_data.items():
         for vnum, txt in verses.items():
             last_results.append((f"{book_key} {ch}:{vnum}", txt))
@@ -279,27 +279,27 @@ def _handle_book_search(bible_tree: dict, book_key: str):
 def _show_current_page():
     global last_results, _current_page_start
     if not last_results:
-        print("ℹ No results to display."); return
+        print(RED + "ℹ No results to display." + RESET); return
     total = len(last_results)
     start = _current_page_start
     end = min(start + PAGE_SIZE, total)
     page = start // PAGE_SIZE + 1
     pages = (total - 1) // PAGE_SIZE + 1
     clear_screen()
-    print(f"\n Showing verses {start+1}–{end} of {total} (Page {page}/{pages})\n")
-    print("-" * 80)
+    print(f"\n Showing verses {BLUE}{start+1}–{end} of {total} {RESET}(Page {page}/{pages})\n")
+    print("-" * 120)
     for i in range(start, end):
         ref, txt = last_results[i]
-        print(f"{ref} — {txt}\n")
-    print("-" * 80)
+        print(f"{BLUE}{ref}{RESET} — {txt}\n")
+    print("-" * 120)
     show_commands()
     if pages > 1:
-        print("\nUse 'next' or 'prev' to navigate.")
+        print("\nUse " + GREEN +"'next' " + RESET + "or " + GREEN + "'prev'" + RESET +" to navigate.")
 
 def navigation(command: str):
     global _current_page_start, last_results
     if not last_results:
-        clear_screen(); print("ℹ No active search results. Use 'search <query>'."); show_commands(); return
+        clear_screen(); print(RED + "ℹ No active search results. Use 'search <query>'." + RESET); show_commands(); return
     total = len(last_results)
     cmd = command.lower()
     if cmd == "next":
@@ -313,7 +313,7 @@ def navigation(command: str):
         else:
             clear_screen(); print(" Already at first page."); show_commands()
     else:
-        print(" Use 'next' or 'prev'.")
+        print(" Use " + GREEN + "'next'" + RESET +" or " + GREEN + "'prev' " + RESET +".")
 
 def clear_results():
     global last_results, _current_page_start

@@ -9,6 +9,7 @@ import json
 import os
 from collections import deque
 from datetime import datetime
+from ui import *
 
 # file paths
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../outputs")
@@ -49,7 +50,7 @@ def _save_history():
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(list(history), f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Could not save history: {e}")
+        print(RED + f"Could not save history: {e}" + RESET)
 
 # Load on import
 _load_history()
@@ -87,7 +88,7 @@ def show_history(limit=None):
 
     # Show newest last (older first)
     for timestamp, query in items[-limit:]:
-        print(f"[{timestamp}] {query}")
+        print(f"{BLUE}[{timestamp}]{RESET} {query}")
 
 def clear_history():
     """
